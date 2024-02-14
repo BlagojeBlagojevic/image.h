@@ -1,0 +1,230 @@
+#ifndef IMAGE_H
+#define IMAGE_H
+#include<assert.h>
+#include<stdio.h>
+#include<stdlib.h>
+#include<stdint.h>
+//LETS BE INCLUDED BY DEFAULT
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
+//MACRO USED FOR GETING PIXEL IN A MATRIX LIKE STRUCTURE
+#define PIXEL_AT(image,y,x) (image).pixels[(y)*(image).width + (x)] 
+
+//IMAGE PARAMETAR MACRO USED FOR LOADING IMAGE PATAMETARS IF IMAGE IS ALRREDY ALOCATED FROM STB IMAGE
+#define IMAGE_PARAMETARS(i) (i).width/(i).chanels,(i).height,(i).chanels
+
+
+
+#define IMAGE_ASSERT assert
+
+#define IMAGE_CALLOC calloc
+
+
+
+typedef struct{
+	
+	int width;       //WIDTH  OF IMAGE IN PIXELS
+	int height;      //HEIGHT OF IMAGE IN PIXELS*NUMBER OF CHANELS
+	int chanels;     //HOW    MUTCH PIXEL IS USED TO REPRESENT THE IMAGE
+	uint8_t *pixels; //ROW PIXELS
+	
+}Image;
+
+
+
+
+Image Image_Alloc(int width,int height,int chanels);  //ALLOCATE IMAGE FULL OF ZEROS
+Image Image_Alloc_Name(const char* name);   //DYNAMICLY ALLOCATE IMAGE ALLOCATION IS IN STB_IMAGE
+
+Image Image_Set(Image i, uint8_t number);
+
+void Image_Save(Image i, const char* name); //WRITE IMAGE AS JPG 
+void Image_Print(Image i);                  //PRINT THE IMAGE WIDTH HEIGHT, CHANELS TO CONSOL NOT USE
+
+void Image_Sum(Image a, Image b);           //SUM TWO IMAGES IN IMAGE ASSERT A MUST BE BIGER OR EQUAL
+void Image_Dec(Image a, Image b);           //SUB TWO IMAGES IN IMAGE ASSERT A MUST BE BIGER OR EQUAL
+void Image_Mul(Image a, Image b);           //SUM TWO IMAGES IN IMAGE ASSERT A MUST BE BIGER OR EQUAL
+void Image_Div(Image a, Image b);           //SUM TWO IMAGES IN IMAGE ASSERT A MUST BE BIGER OR EQUAL
+
+void Image_Copy(Image dest, Image source);  //COPY IMAGE FROM SOURCE TO DEST
+
+Image Image_Applay_Kernel(Image i,float *kernel,int width,int height);//APPLAY CONVOLUTION TO IMAGE 
+float KERNEL_IDENTITY[] = {0,0,0,0,1,0,0,0,0};
+float KERNEL_SHARPEN[] = {0,-1,0,-1,5,-1,-0,-1,-0,};
+float KERNEL_BLURE[] = {0.11,0.11,0.11,0.11,0.11,0.11,0.11,0.11,0.11,};     
+float KERNEL_EDGE[] = {0,-1,0,-1,4,-1,-0,-1,-0,};
+float KERNEL_RIDGE[] = {-1,-1,-1,-1,8,-1,-1,-1,-1,};
+
+void Image_Black_White_Filtar(Image i, int Pixel_Treshold);  //MAKE IMAGE BLACK AND WHITE
+void Image_Zero_Chanel(Image i, int chanel);                 //REMOVE R,G,B,A CHANEL(COLOR)
+void Image_Invert(Image i);         //CHANGE IMAGE PIXELS INTO (INVERT) 255 - img.pixels[i]
+
+#endif
+
+#ifdef IMAGE_IMPLEMENTATION
+
+Image Image_Alloc(int width,int height,int chanels){  //ALLOCATE IMAGE FULL OF ZEROS
+	Image i;
+	i.chanels = chanels; 
+	i.width   = chanels * width; //MULTIPLAY WITH NUMBER OF CHANELS
+	i.height  = height;
+	i.pixels = (uint8_t*) IMAGE_CALLOC(chanels * width * height,sizeof(*i.pixels));
+	return i;
+}
+
+Image Image_Alloc_Name(const char* name){   //DYNAMICLY ALLOCATE IMAGE ALLOCATION IS IN STB_IMAGE
+	Image i;
+	i.pixels = stbi_load(name,&i.width,&i.height,&i.chanels,0);
+	i.width  = i.chanels * i.width; //MULTIPLAY WITH NUMBER OF CHANELS 
+	return i;
+}
+
+void Image_Save(Image i, const char* name){  //WRITE IMAGE AS JPG 
+	
+   stbi_write_jpg(name,(int)(i.width / i.chanels),i.height,i.chanels,i.pixels, 100);
+}
+
+
+void Image_Print(Image i){  //PRINT THE IMAGE WIDTH HEIGHT, CHANELS TO CONSOL NOT USE 
+	
+	printf("__________________________________________________________________\n");
+	 
+	 printf("width %d height: %d chanels :%d\n",i.height,(int)(i.width/i.chanels),i.chanels);
+	
+	printf("\n__________________________________________________________________\n");
+}
+void Image_Sum(Image a, Image b){    //SUM TOW IMAGES IN IMAGE ASSERT A MUST BE BIGER OR EQUAL
+	
+	IMAGE_ASSERT(a.width  >=  b.width);
+	IMAGE_ASSERT(a.height >=  b.height);
+	
+	
+	for(size_t y = 0; (y < a.height) && (y < b.height); y++){
+		for(size_t x = 0; (x < a.width) && (x < b.width); x++){
+			
+		  PIXEL_AT(a,y,x) += PIXEL_AT(b,y,x); 
+		}
+	}
+} 
+
+void Image_Dec(Image a, Image b){    //SUM TOW IMAGES IN IMAGE ASSERT A MUST BE BIGER OR EQUAL
+	
+	IMAGE_ASSERT(a.width  >=  b.width);
+	IMAGE_ASSERT(a.height >= b.height);
+	
+	
+	for(size_t y = 0; (y < a.height) && (y < b.height); y++){
+		for(size_t x = 0; (x < a.width) && (x < b.width); x++){
+			
+		  PIXEL_AT(a,y,x) -= PIXEL_AT(b,y,x); 
+		}
+	}
+} 
+
+void Image_Mul(Image a, Image b){    //SUM TOW IMAGES IN IMAGE ASSERT A MUST BE BIGER OR EQUAL
+	
+	IMAGE_ASSERT(a.width  >=  b.width);
+	IMAGE_ASSERT(a.height >= b.height);
+	
+	
+	for(size_t y = 0; (y < a.height) && (y < b.height); y++){
+		for(size_t x = 0; (x < a.width) && (x < b.width); x++){
+		  PIXEL_AT(a,y,x) *= PIXEL_AT(b,y,x); 
+		}
+	}
+}
+
+void Image_Div(Image a, Image b){    //SUM TOW IMAGES IN IMAGE ASSERT A MUST BE BIGER OR EQUAL
+	
+	IMAGE_ASSERT(a.width  >=  b.width);
+	IMAGE_ASSERT(a.height >= b.height);
+	
+	
+	for(size_t y = 0; (y < a.height) && (y < b.height); y++){
+	
+		for(size_t x = 0; (x < a.width) && (x < b.width); x++){
+	    IMAGE_ASSERT(PIXEL_AT(b,y,x) != 0);		
+		  PIXEL_AT(a,y,x) /= PIXEL_AT(b,y,x); 
+		}
+	}
+}
+
+void Image_Copy(Image dest, Image source){
+	IMAGE_ASSERT(dest.width  >= source.width);
+	IMAGE_ASSERT(dest.height >= source.height);
+	for(size_t y = 0; (y < dest.height) && (y < source.height); y++){
+		for(size_t x = 0; (x < dest.width) && (x < source.width); x++){
+	    PIXEL_AT(dest,y,x) = PIXEL_AT(source,y,x); 
+}
+}
+}
+Image Image_Set(Image i, uint8_t number){
+	
+	for(size_t y = 0; y < i.height;y++){
+		for(size_t x = 0; x < i.width;x++){
+		  PIXEL_AT(i,y,x) = number;
+		}
+	}
+}
+
+Image Image_Applay_Kernel(Image i, float  *kernel, int width,int height){
+	//IMAGE_ASSERT(1);
+	//IMAGE_ASSERT(1);
+  Image a = Image_Alloc(IMAGE_PARAMETARS(i));
+	for(size_t y = 0; y < i.height - height ;y++){
+	  for(size_t x = 0; x < i.width - width;x++){
+ 		   float sum = 0.0f;
+ 		   //printf("sum %d\n",sum); 
+	  	for(size_t j = 0;j < height;j++){
+	  		for(size_t k = 0;k < width;k++){
+ 			
+	  			sum+=(float)(kernel[j*height + k]*(float)PIXEL_AT(i,y+j,x+k));
+	  		
+					//printf("sum %d\n",sum); 
+				}
+			}
+			//sum = (uint8_t)sum;
+			if(sum  > 255)
+			sum = 255;
+			if(sum < 0)
+			sum = 0;
+			PIXEL_AT(a,y + width/height ,x + height/width ) = (uint8_t)sum; 
+		}		
+	}
+	return a;
+
+}
+void Image_Black_White_Filtar(Image img, int Pixel_Treshold){
+	for(size_t i = 0;i < img.width*img.height-3; i+=img.chanels){
+    	float sum = img.pixels[i]+img.pixels[i+1]+img.pixels[i+2];
+    	sum/=img.chanels;
+    	if(sum > Pixel_Treshold){
+    		for(size_t j = 0;j < img.chanels;j++)
+    		  img.pixels[i + j]   = 255;
+    		
+	
+		}
+		else{
+			for(size_t j = 0;j < img.chanels;j++)
+		    img.pixels[i+j]   = 0;
+		}
+	}
+	}
+	
+void Image_Zero_Chanel(Image i, int chanel){
+	for(size_t y = 0;y < i.height*i.width-3;y+=i.chanels){
+	    i.pixels[y + chanel] = 0;
+	
+}	
+}
+void Image_Invert(Image i){
+	for(size_t y = 0;y < i.height*i.width-3;y++)
+	   i.pixels[y] = 255 - i.pixels[y];
+	
+	
+}
+
+#endif
