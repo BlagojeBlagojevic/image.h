@@ -49,16 +49,15 @@ void Image_Sum(Image a, Image b);           //SUM TWO IMAGES IN IMAGE ASSERT A M
 void Image_Dec(Image a, Image b);           //SUB TWO IMAGES IN IMAGE ASSERT A MUST BE BIGER OR EQUAL
 void Image_Mul(Image a, Image b);           //MUL TWO IMAGES IN IMAGE ASSERT A MUST BE BIGER OR EQUAL
 void Image_Div(Image a, Image b);           //DIV TWO IMAGES IN IMAGE ASSERT A MUST BE BIGER OR EQUAL
-void Image_Sum_Shift(Image a, Image b,size_t startX,size_t startY); //MUL OF 2 IMAGES FROM START  IN A
-void Image_Dec_Shift(Image a, Image b,size_t startX,size_t startY); //MUL OF 2 IMAGES FROM START  IN A
+void Image_Sum_Shift(Image a, Image b,size_t startX,size_t startY); //SUM OF 2 IMAGES FROM START  IN A
+void Image_Dec_Shift(Image a, Image b,size_t startX,size_t startY); //SUB OF 2 IMAGES FROM START  IN A
 void Image_Mul_Shift(Image a, Image b,size_t startX,size_t startY); //MUL OF 2 IMAGES FROM START  IN A
-void Image_Div_Shift(Image a, Image b,size_t startX,size_t startY); //MUL OF 2 IMAGES FROM START  IN A
-
+void Image_Div_Shift(Image a, Image b,size_t startX,size_t startY); //DIV OF 2 IMAGES FROM START  IN A
 
 void Image_Copy(Image dest, Image source);  //COPY IMAGE FROM SOURCE TO DEST
 void Image_Copy_Shift(Image dest, Image source,size_t startX,size_t startY);  //COPY IMAGE FROM SOURCE TO DEST STARTING FROM STARTX STARTY
 
-Image Image_Applay_Kernel(Image i,float *kernel,int width,int height);//APPLAY CONVOLUTION TO IMAGE
+void Image_Applay_Kernel(Image a,Image i,float *kernel,int width,int height);//APPLAY CONVOLUTION TO IMAGE
 float KERNEL_IDENTITY[] = {0,0,0,0,1,0,0,0,0};
 float KERNEL_SHARPEN[] = {0,-1,0,-1,5,-1,-0,-1,-0,};
 float KERNEL_BLURE[] = {0.11,0.11,0.11,0.11,0.11,0.11,0.11,0.11,0.11,};
@@ -182,10 +181,10 @@ Image Image_Set(Image i, uint8_t number) {
 		}
 	}
 
-Image Image_Applay_Kernel(Image i, float  *kernel, int width,int height) {
+void Image_Applay_Kernel(Image a,Image i, float  *kernel, int width,int height) {
 	//IMAGE_ASSERT(1);
 	//IMAGE_ASSERT(1);
-	Image a = Image_Alloc(IMAGE_PARAMETARS(i));
+	//Image a = Image_Alloc(IMAGE_PARAMETARS(i));
 	for(size_t y = 0; y < i.height - height ; y++) {
 		for(size_t x = 0; x < i.width - width; x++) {
 			float sum = 0.0f;
@@ -206,7 +205,7 @@ Image Image_Applay_Kernel(Image i, float  *kernel, int width,int height) {
 			PIXEL_AT(a,y + width/height,x + height/width ) = (uint8_t)sum;
 			}
 		}
-	return a;
+	//return a;
 
 	}
 void Image_Black_White_Filtar(Image img, int Pixel_Treshold) {
