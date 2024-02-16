@@ -38,6 +38,7 @@ typedef struct {
 
 Image Image_Alloc(int width,int height,int chanels);  //ALLOCATE IMAGE FULL OF ZEROS
 Image Image_Alloc_Name(const char* name);   //DYNAMICLY ALLOCATE IMAGE ALLOCATION IS IN STB_IMAGE
+Image Image_Free(Image i);
 
 Image Image_Set(Image i, uint8_t number);
 
@@ -330,4 +331,9 @@ void Image_Draw_Rect(Image i, size_t startX,size_t startY,size_t h,size_t w,uint
 			}
 		}
 	}
+	
+	
+Image Image_Free(Image i){
+	free(i.pixels);
+}
 #endif
