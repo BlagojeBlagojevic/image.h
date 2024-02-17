@@ -38,9 +38,9 @@ typedef struct {
 
 Image Image_Alloc(int width,int height,int chanels);  //ALLOCATE IMAGE FULL OF ZEROS
 Image Image_Alloc_Name(const char* name);   //DYNAMICLY ALLOCATE IMAGE ALLOCATION IS IN STB_IMAGE
-Image Image_Free(Image i);
+void Image_Free(Image i);
 
-Image Image_Set(Image i, uint8_t number);
+void Image_Set(Image i, uint8_t number);
 
 void Image_Save(Image i, const char* name); //WRITE IMAGE AS JPG
 void Image_Print(Image i);                  //PRINT THE IMAGE WIDTH HEIGHT, CHANELS TO CONSOL NOT USE
@@ -71,6 +71,10 @@ void Image_Invert(Image i);         //CHANGE IMAGE PIXELS INTO (INVERT) 255 - im
 void Image_Center_Of_Mass(Image i,size_t *yx);  //FUNCTION USED TO CALCULATE CENTER OF MASS IN IMAGE THIS IS UDED TO DESIDE IS SOMTETHING IN IMAGE, SUBIMAGE
 
 void Image_Draw_Rect(Image i, size_t startX,size_t startY,size_t h,size_t w,uint8_t pixel);
+
+
+size_t Load_Binary_To_Image(Image i,char *name);
+void Image_To_Binary(Image i,size_t bin_size,char *name);
 
 
 #endif
@@ -157,8 +161,9 @@ void Image_Div(Image a, Image b) {   //SUM TOW IMAGES IN IMAGE ASSERT A MUST BE 
 	for(size_t y = 0; (y < a.height) && (y < b.height); y++) {
 
 		for(size_t x = 0; (x < a.width) && (x < b.width); x++) {
-			IMAGE_ASSERT(PIXEL_AT(b,y,x) != 0);
-			PIXEL_AT(a,y,x) /= PIXEL_AT(b,y,x);
+			//IMAGE_ASSERT(PIXEL_AT(b,y,x) != 0);
+			if(PIXEL_AT(b,y,x)!=0)
+			   PIXEL_AT(a,y,x) /= PIXEL_AT(b,y,x);
 			}
 		}
 	}
@@ -172,7 +177,7 @@ void Image_Copy(Image dest, Image source) {
 			}
 		}
 	}
-Image Image_Set(Image i, uint8_t number) {
+void Image_Set(Image i, uint8_t number) {
 
 	for(size_t y = 0; y < i.height; y++) {
 		for(size_t x = 0; x < i.width; x++) {
@@ -235,7 +240,7 @@ void Image_Invert(Image i) {
 	}
 void Image_Center_Of_Mass(Image i,size_t *yx) {
 	Image_Black_White_Filtar(i,60);  // That Image is Allredy Black and White
-	size_t xc = 0,yc = 0,nyc=0,nxc=0;
+	size_t xc = 0,yc = 0,nyc=0;
 	for(size_t y = 0; y < i.height - 1; y++) {
 		for(size_t x = 0,counter = 0; x < i.width; x+=i.chanels,counter++) {
 			//printf("x %d y %d\n",x,y);
@@ -332,7 +337,37 @@ void Image_Draw_Rect(Image i, size_t startX,size_t startY,size_t h,size_t w,uint
 	}
 	
 	
-Image Image_Free(Image i){
+void Image_Free(Image i){
 	free(i.pixels);
 }
+
+size_t Load_Binary_To_Image(Image i,char *name){
+	FILE *f = fopen(name,"rb");
+	if(f==NULL)
+	 IMAGE_ASSERT(0 && " FILE IS NOT LOADED !!! ");
+	 for(size_t y = 0; y < i.height;y++){
+	 	for(size_t x = 0; x < i.width;x++){
+		 if(feof(f) != 0){
+		 	fclose(f);
+		 	return x+y*i.width-1;
+		 }
+		 else{
+		 	    fread(&PIXEL_AT(i,y,x),sizeof(uint8_t),1,f);
+					//printf("%d\n",PIXEL_AT(i,y,x)); 
+		 }
+		 }
+	 }
+ 
+}
+void Image_To_Binary(Image i,size_t bin_size,char *name){
+	FILE *f = fopen(name,"wb+");
+	//for(size_t y = 0;y < bin_size;y++){
+		fwrite(i.pixels,sizeof(uint8_t),bin_size,f);
+		printf("Nesto");
+	//}
+	fclose(f);
+	
+}
+
+
 #endif
