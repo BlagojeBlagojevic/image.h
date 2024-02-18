@@ -63,6 +63,7 @@ float KERNEL_SHARPEN[] = {0,-1,0,-1,5,-1,-0,-1,-0,};
 float KERNEL_BLURE[] = {0.11,0.11,0.11,0.11,0.11,0.11,0.11,0.11,0.11,};
 float KERNEL_EDGE[] = {0,-1,0,-1,4,-1,-0,-1,-0,};
 float KERNEL_RIDGE[] = {-1,-1,-1,-1,8,-1,-1,-1,-1,};
+float KERNEL_BL[]={0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,};
 
 void Image_Black_White_Filtar(Image i, int Pixel_Treshold);  //MAKE IMAGE BLACK AND WHITE
 void Image_Zero_Chanel(Image i, int chanel);                 //REMOVE R,G,B,A CHANEL(COLOR)
@@ -191,23 +192,29 @@ void Image_Applay_Kernel(Image a,Image i, float  *kernel, int width,int height) 
 	//IMAGE_ASSERT(1);
 	//Image a = Image_Alloc(IMAGE_PARAMETARS(i));
 	for(size_t y = 0; y < i.height - height ; y++) {
-		for(size_t x = 0; x < i.width - width; x++) {
+		for(size_t z = 0;z < i.chanels;z++)
+		for(size_t x = 0; x < i.width - width; x+=i.chanels) {
 			float sum = 0.0f;
 			//printf("sum %d\n",sum);
 			for(size_t j = 0; j < height; j++) {
 				for(size_t k = 0; k < width; k++) {
 
-					sum+=(float)(kernel[j*height + k]*(float)PIXEL_AT(i,y+j,x+k));
+					sum+=(float)(kernel[j*height + k]*(float)PIXEL_AT(i,y+j,x+(k)*z));
 
 					//printf("sum %d\n",sum);
 					}
 				}
 			//sum = (uint8_t)sum;
-			if(sum  > 255)
-				sum = 255;
-			if(sum < 0)
-				sum = 0;
-			PIXEL_AT(a,y + width/height,x + height/width ) = (uint8_t)sum;
+			if(sum  > 255.0f){
+				sum = 255.0f;
+			}
+				
+			if(sum < 0.0f){
+				sum = 0.0f;
+			}
+				
+			//printf("sum %u\n",(uint8_t)sum);
+			PIXEL_AT(a,y,x + z ) = (uint8_t)sum;
 			}
 		}
 	//return a;
