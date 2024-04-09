@@ -53,6 +53,7 @@ Here's an example of loading an image, applying a filter, and saving the result:
 
 ```c
 #include <stdio.h>
+#define IMAGE_IMPLEMENTATION
 #include "image.h"
 
 int main() {
