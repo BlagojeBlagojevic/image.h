@@ -66,6 +66,8 @@ float KERNEL_EDGE[] = {0,-1,0,-1,4,-1,-0,-1,-0,};
 float KERNEL_RIDGE[] = {-1,-1,-1,-1,8,-1,-1,-1,-1,};
 float KERNEL_BL[]={0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,};
 float KERNEL_BOXBLURE[]={1,1,1,1,1,1,1,1,1,};
+float KERNEL_SOBEL_X[] ={1, 0, -1,2,0,-2,1,0,-1}; 
+float KERNEL_SOBEL_Y[] ={1, 2, 1,0,0,0,-1,-2,-1};
 void Image_Black_White_Filtar(Image i, int Pixel_Treshold);  //MAKE IMAGE BLACK AND WHITE
 void Image_Zero_Chanel(Image i, int chanel);                 //REMOVE R,G,B,A CHANEL(COLOR)
 void Image_Invert(Image i);         //CHANGE IMAGE PIXELS INTO (INVERT) 255 - img.pixels[i]
