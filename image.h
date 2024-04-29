@@ -74,6 +74,7 @@ void Image_Zero_Chanel(Image i, int chanel);                 //REMOVE R,G,B,A CH
 void Image_Invert(Image i);         //CHANGE IMAGE PIXELS INTO (INVERT) 255 - img.pixels[i]
 
 void Image_Center_Of_Mass(Image i,size_t *yx);  //FUNCTION USED TO CALCULATE CENTER OF MASS IN IMAGE THIS IS UDED TO DESIDE IS SOMTETHING IN IMAGE, SUBIMAGE
+void Image_Histogram(Image i, int histogram[255]);
 
 void Image_Draw_Rect(Image i, size_t startX,size_t startY,size_t h,size_t w,uint8_t pixel);
 
@@ -467,6 +468,22 @@ Image Image_Alloc_Name_Fft(const char* name,int xd,int yd)
   free(ia.pixels);
   return b;
 
+
+}
+
+
+
+
+void Image_Histogram(Image i, int histogram[255]){// PROVIDE grey scale image
+    IMAGE_ASSERT(i.chanels == 1);
+    for(size_t y = 0; y < i.height;y++){
+
+        for (size_t x = 0; x < i.width; x++)
+        {
+            histogram[PIXEL_AT(i,y,x)]++;
+        }
+        
+    }
 
 }
 
