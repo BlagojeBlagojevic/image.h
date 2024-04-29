@@ -39,6 +39,7 @@ typedef struct {
 Image Image_Alloc(int width,int height,int chanels);  //ALLOCATE IMAGE FULL OF ZEROS
 Image Image_Alloc_Name(const char* name);   //DYNAMICLY ALLOCATE IMAGE ALLOCATION IS IN STB_IMAGE
 Image Image_Alloc_Name_Fft(const char* name,int xd,int yd);
+void Image_Alloc_Grey(Image i, Image *a);
 void Image_Free(Image i);
 
 void Image_Set(Image i, uint8_t number);
@@ -104,6 +105,32 @@ Image Image_Alloc_Name(const char* name) {  //DYNAMICLY ALLOCATE IMAGE ALLOCATIO
 	i.width  = i.chanels * i.width; //MULTIPLAY WITH NUMBER OF CHANELS
 	return i;
 	}
+
+void Image_Alloc_Grey(Image i, Image *a){
+
+    
+    *a = Image_Alloc(i.width / i.chanels,i.height,1);
+    size_t counter = 0;
+    for(size_t y = 0;y < i.height;y++){
+        for (size_t x = 0; x < i.width; x+=i.chanels)
+        {
+         uint32_t sum = 0;
+         for (size_t z = 0; z < i.chanels; z++)
+         {
+            sum+=PIXEL_AT(i,y,x+z);
+         }
+         PIXEL_AT(*a, y, counter++) = sum / 3;
+         if(counter == a->width)
+            counter = 0;
+           
+        }
+        
+    }
+    
+}
+
+
+
 
 void Image_Save(Image i, const char* name) { //WRITE IMAGE AS JPG
 
@@ -453,7 +480,7 @@ Image Image_Alloc_Name_Fft(const char* name,int xd,int yd)
 #ifdef DYNAMIC
 
 #ifndef ARRAY_TYPE
-#define ARRAY_TYPE int 
+#define ARRAY_TYPE uint32_t 
 #endif 
 
 typedef struct d{
@@ -488,6 +515,14 @@ void insert_Array(D_ARRAY *array,ARRAY_TYPE elem){
 	
 }
 
-#endif
+void print_Array(D_ARRAY *array){
+	for(size_t i = 0; i < array->index_of_last;i++){
+		printf("%d\n", (int)array->array[i]);
 
+	}
+
+}
+
+
+#endif
 
