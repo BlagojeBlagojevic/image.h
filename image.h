@@ -4,6 +4,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdint.h>
+#include<complex.h>
 //LETS BE INCLUDED BY DEFAULT
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -75,6 +76,8 @@ void Image_Invert(Image i);         //CHANGE IMAGE PIXELS INTO (INVERT) 255 - im
 
 void Image_Center_Of_Mass(Image i,size_t *yx);  //FUNCTION USED TO CALCULATE CENTER OF MASS IN IMAGE THIS IS UDED TO DESIDE IS SOMTETHING IN IMAGE, SUBIMAGE
 void Image_Histogram(Image i, int histogram[255]);
+int Image_Similarity(Image i, Image b);
+
 
 void Image_Draw_Rect(Image i, size_t startX,size_t startY,size_t h,size_t w,uint8_t pixel);
 
@@ -476,6 +479,11 @@ Image Image_Alloc_Name_Fft(const char* name,int xd,int yd)
 
 void Image_Histogram(Image i, int histogram[255]){// PROVIDE grey scale image
     IMAGE_ASSERT(i.chanels == 1);
+	for (size_t x = 0; x < 255; x++)
+	{
+		histogram[x] = 0;
+	}
+	
     for(size_t y = 0; y < i.height;y++){
 
         for (size_t x = 0; x < i.width; x++)
@@ -486,6 +494,41 @@ void Image_Histogram(Image i, int histogram[255]){// PROVIDE grey scale image
     }
 
 }
+
+
+int Image_Similarity(Image i, Image b){
+
+    int histogram_x[255], histogram_y[255];
+    Image grey_x, grey_y;
+    Image_Alloc_Grey(i, &grey_x);
+    Image_Alloc_Grey(b,&grey_y);
+    Image_Histogram(grey_y,histogram_y);
+    Image_Histogram(grey_x,histogram_x);
+    double sum = 0,sum_y = 0, sum_x = 0;
+    for (size_t x = 0; x < 255; x++)
+    {
+        sum_x += histogram_x[x];
+        sum_y += histogram_y[x]; 
+        
+    }
+    //printf("sum_y %d sum_y %d",sum_x, sum_y);
+    for (size_t x = 0; x < 255; x++)
+    {
+        sum+=fabs(((double)histogram_x[x] / (double)sum_x - (double)histogram_y[x] / (double)sum_y));
+      
+    }
+    
+    sum = 1.0f - sum;
+    
+    printf("Percent of simaliriti betwen images is %f \n", sum);
+    
+    Image_Free(grey_x);
+    Image_Free(grey_y);
+    return sum;
+
+
+}
+
 
 
 
@@ -542,4 +585,3 @@ void print_Array(D_ARRAY *array){
 
 
 #endif
-
