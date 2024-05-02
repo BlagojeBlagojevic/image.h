@@ -14,6 +14,7 @@
 //MACRO USED FOR GETING PIXEL IN A MATRIX LIKE STRUCTURE
 #define PIXEL_AT(image,y,x) (image).pixels[(y)*(image).width + (x)]
 
+
 //IMAGE PARAMETAR MACRO USED FOR LOADING IMAGE PATAMETARS IF IMAGE IS ALRREDY ALOCATED FROM STB IMAGE
 #define IMAGE_PARAMETARS(i) (i).width/(i).chanels,(i).height,(i).chanels
 
@@ -25,7 +26,7 @@
 
 #include<complex.h>
 
-typedef struct {
+typedef struct{
 
 	int width;       //WIDTH  OF IMAGE IN PIXELS
 	int height;      //HEIGHT OF IMAGE IN PIXELS*NUMBER OF CHANELS
@@ -34,14 +35,30 @@ typedef struct {
 
 	} Image;
 
+typedef struct 
+{
+	int width;
+	int height;
+	uint32_t *pixels;
+}Image32;
 
 
 
 Image Image_Alloc(int width,int height,int chanels);  //ALLOCATE IMAGE FULL OF ZEROS
+ 
 Image Image_Alloc_Name(const char* name);   //DYNAMICLY ALLOCATE IMAGE ALLOCATION IS IN STB_IMAGE
 Image Image_Alloc_Name_Fft(const char* name,int xd,int yd);
 void Image_Alloc_Grey(Image i, Image *a);
 void Image_Free(Image i);
+
+Image   Image32_to_Image(Image32);
+Image32 Image_to_Image32(Image i);
+Image32 Image32_Alloc_Name(const char* name);
+Image32 Image_Alloc32_t(int width, int height); // 32 BIT IMAGE
+void Image32_Save(Image32 i, const char* name); //WRITE IMAGE AS JPG
+void Image32_Free(Image32 i);
+Image32 Image_Field(Image a, Image b, int r);
+//void Image32_Applay_Kernel(Image32 a,Image32 i,float *kernel,int width,int height);
 
 void Image_Set(Image i, uint8_t number);
 
@@ -80,7 +97,7 @@ float Image_Similarity(Image i, Image b);
 
 
 void Image_Draw_Rect(Image i, size_t startX,size_t startY,size_t h,size_t w,uint8_t pixel);
-
+void Image_Draw_Point(Image i, size_t startX,size_t startY, uint8_t r, uint8_t g, uint8_t b);
 
 size_t Load_Binary_To_Image(Image i,char *name);
 void Image_To_Binary(Image i,size_t bin_size,char *name);
@@ -103,12 +120,16 @@ Image Image_Alloc(int width,int height,int chanels) { //ALLOCATE IMAGE FULL OF Z
 	return i;
 	}
 
+
+
 Image Image_Alloc_Name(const char* name) {  //DYNAMICLY ALLOCATE IMAGE ALLOCATION IS IN STB_IMAGE
 	Image i;
 	i.pixels = stbi_load(name,&i.width,&i.height,&i.chanels,0);
 	i.width  = i.chanels * i.width; //MULTIPLAY WITH NUMBER OF CHANELS
 	return i;
 	}
+
+
 
 void Image_Alloc_Grey(Image i, Image *a){
 
@@ -380,7 +401,18 @@ void Image_Draw_Rect(Image i, size_t startX,size_t startY,size_t h,size_t w,uint
 			}
 		}
 	}
-	
+
+
+void Image_Draw_Point(Image i, size_t startX,size_t startY, uint8_t r, uint8_t g, uint8_t b){
+	IMAGE_ASSERT((startY) <= i.height);
+	IMAGE_ASSERT((startX) <= i.width);
+	if(startX%3!=0)
+		startX-=startX%3;
+	PIXEL_AT(i, startY, startX)      = r;
+	PIXEL_AT(i,startY,startX + 1)    = g;
+	PIXEL_AT(i,startY,startX + 2)    = b;
+	}
+
 	
 void Image_Free(Image i){
 	free(i.pixels);
@@ -528,6 +560,102 @@ float Image_Similarity(Image i, Image b){
 
 
 }
+
+
+Image32 Image_Alloc32_t(int width,int height) { //ALLOCATE IMAGE FULL OF ZEROS
+	Image32 i;
+	i.width   = width; //MULTIPLAY WITH NUMBER OF CHANELS
+	i.height  = height;
+	i.pixels = (uint32_t*) IMAGE_CALLOC(width * height,sizeof(uint32_t));
+	return i;
+	}
+
+void Image32_Free(Image32 i){
+	free(i.pixels);
+}
+void Image32_Save(Image32 i, const char* name) { //WRITE IMAGE AS JPG
+
+	stbi_write_jpg(name,(int)(i.width),i.height,4 ,i.pixels, 100);
+	}
+
+Image32 Image_Field(Image a, Image b, int r){
+    Image grey1, grey2;
+    Image_Alloc_Grey(a, &grey1);
+    Image_Alloc_Grey(b, &grey2);
+    Image32 distances = Image_Alloc32_t(grey1.width ,grey1.height);
+    //init_Array(&distances, 1000);
+    for (size_t y = 0; y < grey1.height; y++)
+    {
+        for (size_t x = 0; x < grey2.width; x++)
+        {
+            if(PIXEL_AT(grey1, y, x) != PIXEL_AT(grey2, y, x)){
+                int start_x = x - r, start_y = y - r, stop_x = x + r, stop_y = y + r;
+                if(start_x <= 0)
+                    start_x = 0;
+                if(stop_x >= grey1.width)
+                    stop_x = grey1.width - 1;
+                if(start_y <= 0)
+                    start_y = 0;
+                if(stop_y >= grey1.height)
+                    stop_y = grey1.height - 1;
+                float min_distance = 0xFFFFFF,distance;
+                for(size_t i = start_y; i < stop_y;i++){
+                    for (size_t j = start_x; j < stop_x; j++)
+                    {
+                        if(PIXEL_AT(grey1, i, j) == PIXEL_AT(grey2, i, j))
+                        {
+                            distance = sqrt(i*i + j*j);       
+                            if(distance < min_distance){
+                                min_distance = distance;
+                            }
+                        }
+                    }
+                }
+                PIXEL_AT(distances, y, x) = (uint32_t)min_distance;
+            }
+
+        else{
+            PIXEL_AT(distances, y, x) = (uint32_t)0;
+            
+        }
+        }        
+    }
+
+    //Image32_Free(distances)
+    Image_Free(grey1);
+    Image_Free(grey2);
+    return distances;
+
+}
+Image32 Image_to_Image32(Image i){
+	IMAGE_ASSERT(i.chanels >= 3);
+	Image32 b = Image_Alloc32_t( (uint32_t)i.width / (uint32_t)i.chanels, i.height);
+	memcpy(b.pixels,i.pixels,i.width*i.height);
+	
+	
+	return b;
+
+}
+
+Image Image32_to_Image(Image32 i){
+	//IMAGE_ASSERT(i.chanels > 3);
+	Image b = Image_Alloc(i.width , i.height, 3);
+	memcpy(b.pixels,i.pixels,i.width*i.height*3);
+	return b;
+}
+
+
+Image32 Image32_Alloc_Name(const char* name) {  //DYNAMICLY ALLOCATE IMAGE ALLOCATION IS IN STB_IMAGE
+	
+	Image a = Image_Alloc_Name(name);
+	printf("nESTO\n");
+	Image32 i = Image_to_Image32(a);
+	Image_Free(a);
+	return i;
+	
+
+	
+	}
 
 
 
