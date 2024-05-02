@@ -76,7 +76,7 @@ void Image_Invert(Image i);         //CHANGE IMAGE PIXELS INTO (INVERT) 255 - im
 
 void Image_Center_Of_Mass(Image i,size_t *yx);  //FUNCTION USED TO CALCULATE CENTER OF MASS IN IMAGE THIS IS UDED TO DESIDE IS SOMTETHING IN IMAGE, SUBIMAGE
 void Image_Histogram(Image i, int histogram[255]);
-int Image_Similarity(Image i, Image b);
+float Image_Similarity(Image i, Image b);
 
 
 void Image_Draw_Rect(Image i, size_t startX,size_t startY,size_t h,size_t w,uint8_t pixel);
@@ -496,7 +496,7 @@ void Image_Histogram(Image i, int histogram[255]){// PROVIDE grey scale image
 }
 
 
-int Image_Similarity(Image i, Image b){
+float Image_Similarity(Image i, Image b){
 
     int histogram_x[255], histogram_y[255];
     Image grey_x, grey_y;
