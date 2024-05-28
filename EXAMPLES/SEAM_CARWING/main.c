@@ -47,7 +47,7 @@ void Image_Copy_Stop(Image dest, Image source){
 
 
 int main() {
-	Image i = Image_Alloc_Name("12.jpg");
+	Image i = Image_Alloc_Name("3.jpg");
 
 	Image a, b, c;
 	Image_Alloc_Grey(i, &a);
@@ -131,7 +131,7 @@ int main() {
 	Image i_save = Image_Alloc(i.width/3 - counter, i.height,i.chanels);
 	//system("pause");
 	Image_Copy(i_save, i);
-	Image_Save(i_save, "saved.jpg");
+	Image_Save(i, "saved.jpg");
 	
 	Image_Free(a);
 	Image_Free(b);
